@@ -50,8 +50,9 @@ class MailboxSource extends Source
     public function current(): object
     {
         $this->msg = $this->data->message($this->list[$this->index]);
-        if (!$this->msg->isCorrect()) {
-            throw new \Exception('Incorrect message', -1);
+        if (!($errno = $this->msg->isCorrect())) {
+            $overview = $msg->overview();
+            throw new \Exception('Incorrect message (' . $errno . ') by ' . $overview->from . ', sent on ' . $overview->date, -1);
         }
         $att = $this->msg->attachment();
         return ReportFile::fromStream($att->datastream(), $att->filename());
