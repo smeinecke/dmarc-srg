@@ -68,7 +68,7 @@ class MailMessage
             return -2;
         }
         $ext = $this->attachment->extension();
-        if ($ext === 'zip' || $ext === 'gz' || $ext === 'xml') {
+        if (!in_array($ext, ['zip', 'gz', 'xml'])) {
             return -3;
         }
         return true;
