@@ -60,16 +60,18 @@ class MailMessage
     public function isCorrect()
     {
         $this->ensureAttachment();
-        if ($this->attachments_cnt === 1) {
-            $bytes = $this->attachment->size();
-            if ($bytes >= 50 && $bytes <= 1 * 1024 * 1024) {
-                $ext = $this->attachment->extension();
-                if ($ext === 'zip' || $ext === 'gz' || $ext === 'xml') {
-                    return true;
-                }
-            }
+        if ($this->attachments_cnt !== 1) {
+            return -1;
         }
-        return false;
+        $bytes = $this->attachment->size();
+        if ($bytes < 50 || $bytes > 1 * 1024 * 1024) {
+            return -2;
+        }
+        $ext = $this->attachment->extension();
+        if (!in_array($ext, ['zip', 'gz', 'xml'])) {
+            return -3;
+        }
+        return true;
     }
 
     public function attachment()
