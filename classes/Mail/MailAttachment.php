@@ -23,6 +23,7 @@
 namespace Liuch\DmarcSrg\Mail;
 
 use Exception;
+use Liuch\DmarcSrg\ReportFile\ReportFile;
 
 class MailAttachment
 {
@@ -31,15 +32,26 @@ class MailAttachment
     private $bytes;
     private $number;
     private $mnumber;
+    private $stream;
+    private $mime_type;
 
     public function __construct($conn, $params)
     {
-        $this->conn     = $conn;
-        $this->filename = $params['filename'];
-        $this->bytes    = $params['bytes'];
-        $this->number   = $params['number'];
-        $this->mnumber  = $params['mnumber'];
-        $this->encoding = $params['encoding'];
+        $this->conn      = $conn;
+        $this->filename  = $params['filename'];
+        $this->bytes     = $params['bytes'];
+        $this->number    = $params['number'];
+        $this->mnumber   = $params['mnumber'];
+        $this->encoding  = $params['encoding'];
+        $this->stream    = null;
+        $this->mime_type = null;
+    }
+
+    public function __destruct()
+    {
+        if (!is_null($this->stream)) {
+            fclose($this->stream);
+        }
     }
 
     public function size()
@@ -52,6 +64,13 @@ class MailAttachment
         return $this->filename;
     }
 
+    public function mime_type()
+    {
+        return is_null($this->mime_type) ?
+            ($this->mime_type = ReportFile::get_mime_type($this->filename, $this->datastream())) :
+            $this->mime_type;
+    }
+
     public function extension()
     {
         return pathinfo($this->filename, PATHINFO_EXTENSION);
@@ -59,10 +78,12 @@ class MailAttachment
 
     public function datastream()
     {
-        $stream = fopen('php://temp', 'r+');
-        fwrite($stream, $this->tostring());
-        rewind($stream);
-        return $stream;
+        if (is_null($this->stream)) {
+            $this->stream = fopen('php://temp', 'r+');
+            fwrite($this->stream, $this->tostring());
+        }
+        rewind($this->stream);
+        return $this->stream;
     }
 
     private function fetchBody()

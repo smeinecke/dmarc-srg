@@ -63,14 +63,17 @@ class MailMessage
         if ($this->attachments_cnt !== 1) {
             return -1;
         }
+
         $bytes = $this->attachment->size();
         if ($bytes < 50 || $bytes > 1 * 1024 * 1024) {
             return -2;
         }
-        $ext = $this->attachment->extension();
-        if (!in_array($ext, ['zip', 'gz', 'xml'])) {
+
+        $mime_type = $this->attachment->mime_type();
+        if (!in_array($mime_type, ['application/zip', 'application/gzip', 'text/xml'])) {
             return -3;
         }
+
         return true;
     }
 

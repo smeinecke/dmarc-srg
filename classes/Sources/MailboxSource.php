@@ -55,7 +55,7 @@ class MailboxSource extends Source
             throw new \Exception('Incorrect message (' . $errno . ') by ' . $overview->from . ', sent on ' . $overview->date, -1);
         }
         $att = $this->msg->attachment();
-        return ReportFile::fromStream($att->datastream(), $att->filename());
+        return ReportFile::fromStream($att->datastream(), $att->filename(), $att->mime_type());
     }
 
     /**
