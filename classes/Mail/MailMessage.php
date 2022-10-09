@@ -57,21 +57,20 @@ class MailMessage
         }
     }
 
-    public function isCorrect()
+    public function validate()
     {
         $this->ensureAttachment();
         if ($this->attachments_cnt !== 1) {
-            return -1;
+            throw new Exception('Attachment count is not valid (' . $this->attachments_cnt . ')');
         }
         $bytes = $this->attachment->size();
         if ($bytes < 50 || $bytes > 1 * 1024 * 1024) {
-            return -2;
+            throw new Exception('Attachment filesize is not valid (' . $bytes . ' bytes)');
         }
         $ext = $this->attachment->extension();
         if (!in_array($ext, ['zip', 'gz', 'xml'])) {
-            return -3;
+            throw new Exception('Attachment file type is not valid (' . $ext . ')');
         }
-        return true;
     }
 
     public function attachment()
