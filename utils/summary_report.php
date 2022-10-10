@@ -23,12 +23,13 @@
  *
  * This script creates a summary report and sends it by email.
  * The email addresses must be specified in the configuration file.
- * The script have two required parameters: `domain` and `period`.
+ * The script have two required parameters: `domain` and `period`, and one optional: `emailto`.
  * The `domain` parameter must contain FQDN
  * The `period` parameter must have one of these values:
- * `lastmonth`   - to make a report for the last month;
- * `lastweek`    - to make a report for the last week;
- * `lastndays:N` - to make a report for the last N days;
+ *   `lastmonth`   - to make a report for the last month;
+ *   `lastweek`    - to make a report for the last week;
+ *   `lastndays:N` - to make a report for the last N days;
+ * The `emailto` parameter is optional. Set it if you want to use a different email address to sent the report to.
  *
  * Some examples:
  *
@@ -59,8 +60,9 @@ if (php_sapi_name() !== 'cli') {
     exit(1);
 }
 
-$domain = null;
-$period = null;
+$domain  = null;
+$period  = null;
+$emailto = null;
 for ($i = 1; $i < count($argv); ++$i) {
     $av = explode('=', $argv[$i]);
     if (count($av) == 2) {
@@ -70,6 +72,9 @@ for ($i = 1; $i < count($argv); ++$i) {
                 break;
             case 'period':
                 $period = $av[1];
+                break;
+            case 'emailto':
+                $emailto = $av[1];
                 break;
         }
     }
@@ -82,6 +87,9 @@ if (!$domain) {
 if (!$period) {
     echo 'Error: Parameter "period" is not specified' . PHP_EOL;
     exit(1);
+}
+if (!$emailto) {
+    $emailto = $mailer['default'];
 }
 
 try {
@@ -96,7 +104,7 @@ try {
         'Content-Type' => 'text/plain; charset=utf-8'
     ];
     mail(
-        $mailer['default'],
+        $emailto,
         mb_encode_mimeheader($rep->subject(), 'UTF-8'),
         implode("\r\n", $rep->text()),
         $headers
