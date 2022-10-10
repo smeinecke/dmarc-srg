@@ -214,7 +214,7 @@ class Report
         } catch (\Exception $e) {
             $db->rollBack();
             if ($e->getCode() == '23000') {
-                throw new \Exception('This report has already been loaded', -1);
+                throw new \Exception('Report ' . $this->data['external_id'] . ' has already been loaded', -1);
             } elseif ($e->getCode() == -1) {
                 throw $e;
             } else {
