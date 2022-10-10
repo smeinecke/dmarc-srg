@@ -49,7 +49,7 @@ class MailAttachment
 
     public function __destruct()
     {
-        if (!is_null($this->stream)) {
+        if (!is_null($this->stream) && get_resource_type($this->stream) == 'stream') {
             fclose($this->stream);
         }
     }
