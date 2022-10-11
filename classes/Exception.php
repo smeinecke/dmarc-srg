@@ -32,18 +32,29 @@
 namespace Liuch\DmarcSrg;
 
 /**
- * Static common arrays
+ * Generic Exception class with additional informations
  */
-class Common
+class Exception extends \Exception
 {
     /**
-     * This array needs for converting the align result text constant to integer value and back
-     * in Report and ReportList classes
+     * Additional data for this exception
      */
-    public static $align_res = [ 'fail', 'unknown', 'pass' ];
+    protected $data = null;
+
     /**
-     * This array needs for converting the the disposition result text constant to integer value and back
-     * in Report and ReportList classes
+     * Constructor, add additional $data parameter
      */
-    public static $disposition = [ 'reject', 'quarantine', 'none' ];
+    public function __construct(string $message = "", int $code = 0, ?\Throwable $previous = null, ?array $data = null)
+    {
+        parent::__construct($message, $code, $previous);
+        $this->data = $data;
+    }
+
+    /**
+     * Return additional data stored while creating this object
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
 }
