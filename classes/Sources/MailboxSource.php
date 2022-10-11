@@ -54,8 +54,7 @@ class MailboxSource extends Source
         try {
             $this->msg->validate();
         } catch(Exception $e) {
-            $overview = $this->msg->overview();
-            throw new Exception('Incorrect message (' . $e->getMessage() . ') by ' . $overview->from . ', sent on ' . $overview->date, -1);
+            throw new \Exception('Incorrect message: ' . $e->getMessage(), -1);
         }
         $att = $this->msg->attachment();
         return ReportFile::fromStream($att->datastream(), $att->filename(), $att->mime_type());

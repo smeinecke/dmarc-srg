@@ -39,10 +39,12 @@ class ReportFile
         'zip' => 'application/zip'
     ];
 
-    private function __construct($filename, $fd, $type = null)
+    private function __construct($filename, $type = null, $fd = null, $remove = null, $filepath = null)
     {
         $this->filename = $filename;
         $this->type = $type ?? self::get_mime_type($filename, $fd);
+        $this->remove = $remove;
+        $this->filepath = $filepath;
 
         switch ($this->type) {
             case 'application/gzip':
@@ -98,16 +100,19 @@ class ReportFile
         if (!is_file($filepath)) {
             throw new \Exception('ReportFile: it is not a file', -1);
         }
-        $fname = $filename ? basename($filename) : basename($filepath);
-        $rf = new ReportFile($fname, null);
-        $rf->remove = $remove;
-        $rf->filepath = $filepath;
-        return $rf;
+
+        return new ReportFile(
+            $filename ? basename($filename) : basename($filepath),
+            null,
+            null,
+            $remove,
+            $filepath
+        );
     }
 
     public static function fromStream($fd, $filename, $type)
     {
-        return new ReportFile($filename, $fd, $type);
+        return new ReportFile($filename, $type, $fd);
     }
 
     public function filename()
