@@ -31,6 +31,7 @@
 
 namespace Liuch\DmarcSrg\Report;
 
+use Liuch\DmarcSrg\Exception;
 use Liuch\DmarcSrg\Report\Report;
 use Liuch\DmarcSrg\Sources\Source;
 use Liuch\DmarcSrg\ReportLog\ReportLogItem;
@@ -93,15 +94,25 @@ class ReportFetcher
             // Extracting and saving reports
             try {
                 $rfile   = $this->source->current();
-                $fname   = $rfile->filename();
                 $report  = Report::fromXmlFile($rfile->datastream());
-                $result  = $report->save($fname);
+                $result  = $report->save();
                 $success = true;
             } catch (\Exception $e) {
+                $report_data = null;
+                // fetch report_data if file has been loaded
+                if (!is_null($report)) {
+                    $report_data = $report->get();
+                }
+                // check if custom exception with additional data
+                elseif ($e instanceof Exception) {
+                    $report_data = $e->getData();
+                }
+
                 $err_msg = $e->getMessage();
                 $result = [
-                    'error_code' => $e->getCode(),
-                    'message'    => $err_msg
+                    'error_code'  => $e->getCode(),
+                    'message'     => $err_msg,
+                    'report_data' => $report_data
                 ];
             }
             unset($rfile);

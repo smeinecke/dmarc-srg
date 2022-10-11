@@ -48,3 +48,28 @@ class Common
     public static $disposition = [ 'reject', 'quarantine', 'none' ];
 }
 
+/**
+ * Generic Exception class with additional informations
+ */
+class Exception extends \Exception
+{
+    /**
+     * Additional data for this exception
+     */
+    protected $data = null;
+
+    /**
+     * Constructor, add additional $data parameter
+     */
+    public function __construct(string $message = "", int $code = 0, ?\Throwable $previous = null, ?array $data = null) {
+        parent::__construct($message, $code, $previous);
+        $this->data = $data;
+    }
+
+    /**
+     * Return additional data stored while creating this object
+     */
+    public function getData() {
+        return $this->data;
+    }
+}

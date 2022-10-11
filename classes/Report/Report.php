@@ -22,6 +22,7 @@
 
 namespace Liuch\DmarcSrg\Report;
 
+use Liuch\DmarcSrg\Exception;
 use Liuch\DmarcSrg\Common;
 use Liuch\DmarcSrg\DateTime;
 use Liuch\DmarcSrg\Domains\Domain;
@@ -44,7 +45,7 @@ class Report
     {
         $data = ReportData::fromXmlFile($fd);
         if (!self::checkData($data)) {
-            throw new \Exception('Incorrect or incomplete report data', -1);
+            throw new Exception('Incorrect or incomplete report data', -1, null, $data);
         }
         return new Report($data);
     }
@@ -64,15 +65,15 @@ class Report
         if (empty($domain) || empty($report_id)) {
             throw new \Exception('Not specified report\'s domain or id');
         }
-        $this->data = [ 'domain' => $domain, 'report_id' => $report_id, 'records' => [] ];
+        $this->data = ['domain' => $domain, 'report_id' => $report_id, 'records' => []];
         $db = Database::connection();
         try {
             $st = $db->prepare(
                 'SELECT `rp`.`id`, `begin_time`, `end_time`, `loaded_time`, `org`, `email`, `extra_contact_info`,'
-                . ' `error_string`, `policy_adkim`, `policy_aspf`, `policy_p`, `policy_sp`, `policy_pct`, `policy_fo`'
-                . ' FROM `' . Database::tablePrefix('reports') . '` AS `rp`'
-                . ' INNER JOIN `' . Database::tablePrefix('domains') . '` AS `dom` ON `dom`.`id` = `rp`.`domain_id`'
-                . ' WHERE `fqdn` = ? AND `external_id` = ?'
+                    . ' `error_string`, `policy_adkim`, `policy_aspf`, `policy_p`, `policy_sp`, `policy_pct`, `policy_fo`'
+                    . ' FROM `' . Database::tablePrefix('reports') . '` AS `rp`'
+                    . ' INNER JOIN `' . Database::tablePrefix('domains') . '` AS `dom` ON `dom`.`id` = `rp`.`domain_id`'
+                    . ' WHERE `fqdn` = ? AND `external_id` = ?'
             );
             $st->bindValue(1, $domain, \PDO::PARAM_STR);
             $st->bindValue(2, $report_id, \PDO::PARAM_STR);
@@ -107,8 +108,8 @@ class Report
             $order_str = $this->sqlOrder();
             $st = $db->prepare(
                 'SELECT `report_id`, `ip`, `rcount`, `disposition`, `reason`, `dkim_auth` , `spf_auth`, `dkim_align`,'
-                . ' `spf_align`, `envelope_to`, `envelope_from`, `header_from`'
-                . ' FROM `' . Database::tablePrefix('rptrecords') . '` WHERE `report_id` = ?' . $order_str
+                    . ' `spf_align`, `envelope_to`, `envelope_from`, `header_from`'
+                    . ' FROM `' . Database::tablePrefix('rptrecords') . '` WHERE `report_id` = ?' . $order_str
             );
             $st->bindValue(1, $id, \PDO::PARAM_INT);
             $st->execute();
@@ -133,18 +134,18 @@ class Report
             }
         } catch (\Exception $e) {
             if ($e->getCode() !== -1) {
-                throw new \Exception('Failed to get the report from DB', -1);
+                throw new Exception('Failed to get the report from DB', -1, $e);
             }
             throw $e;
         }
     }
 
-    public function save(string $real_fname)
+    public function save()
     {
         $b_ts = $this->data['begin_time'];
         $e_ts = $this->data['end_time'];
         if (!$b_ts->getTimestamp() || !$e_ts->getTimestamp() || $b_ts > $e_ts) {
-            throw new \Exception('Failed to add an incoming report: wrong date range', -1);
+            throw new Exception('Failed to add an incoming report: wrong date range', -1);
         }
 
         $db = Database::connection();
@@ -156,16 +157,16 @@ class Report
                 // The domain is not found. Let's try to add it automatically.
                 $domain = self::insertDomain($fqdn);
             } elseif (!$domain->active()) {
-                throw new \Exception('Failed to add an incoming report: the domain is inactive', -1);
+                throw new Exception('Failed to add an incoming report: the domain is inactive', -1);
             }
 
             $ct = new DateTime();
             $st = $db->prepare(
                 'INSERT INTO `' . Database::tablePrefix('reports')
-                . '` (`domain_id`, `begin_time`, `end_time`, `loaded_time`, `org`, `external_id`, `email`,'
-                . ' `extra_contact_info`, `error_string`, `policy_adkim`, `policy_aspf`, `policy_p`,'
-                . ' `policy_sp`, `policy_pct`, `policy_fo`, `seen`)'
-                . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)'
+                    . '` (`domain_id`, `begin_time`, `end_time`, `loaded_time`, `org`, `external_id`, `email`,'
+                    . ' `extra_contact_info`, `error_string`, `policy_adkim`, `policy_aspf`, `policy_p`,'
+                    . ' `policy_sp`, `policy_pct`, `policy_fo`, `seen`)'
+                    . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)'
             );
             $st->bindValue(1, $domain->id(), \PDO::PARAM_INT);
             $st->bindValue(2, $this->data['begin_time']->format('Y-m-d H:i:s'), \PDO::PARAM_STR);
@@ -188,9 +189,9 @@ class Report
 
             $st = $db->prepare(
                 'INSERT INTO `' . Database::tablePrefix('rptrecords')
-                . '` (`report_id`, `ip`, `rcount`, `disposition`, `reason`, `dkim_auth`, `spf_auth`, `dkim_align`,'
-                . ' `spf_align`, `envelope_to`, `envelope_from`, `header_from`)'
-                . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                    . '` (`report_id`, `ip`, `rcount`, `disposition`, `reason`, `dkim_auth`, `spf_auth`, `dkim_align`,'
+                    . ' `spf_align`, `envelope_to`, `envelope_from`, `header_from`)'
+                    . ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
             foreach ($this->data['records'] as &$rec_data) {
                 $st->bindValue(1, $new_id, \PDO::PARAM_INT);
@@ -214,14 +215,14 @@ class Report
         } catch (\Exception $e) {
             $db->rollBack();
             if ($e->getCode() == '23000') {
-                throw new \Exception('Report ' . $this->data['external_id'] . ' has already been loaded', -1);
+                throw new Exception('This report has already been loaded', -1, $e);
             } elseif ($e->getCode() == -1) {
                 throw $e;
             } else {
-                throw new \Exception('Failed to insert the report', -1);
+                throw new Exception('Failed to insert the report', -1, $e);
             }
         }
-        return [ 'message' => 'The report is loaded successfully' ];
+        return ['message' => 'The report is loaded successfully'];
     }
 
     public function get()
@@ -232,15 +233,15 @@ class Report
     public function set($name, $value)
     {
         if ($name !== 'seen' && gettype($value) !== 'boolean') {
-            throw new \Exception('Incorrect parameters', -1);
+            throw new Exception('Incorrect parameters', -1);
         }
 
         $db = Database::connection();
         try {
             $st = $db->prepare(
                 'UPDATE `' . Database::tablePrefix('reports') . '` AS `rp`'
-                . ' INNER JOIN `' . Database::tablePrefix('domains') . '` AS `dom`'
-                . ' ON `rp`.`domain_id` = `dom`.`id` SET `seen` = ? WHERE `fqdn` = ? AND `external_id` = ?'
+                    . ' INNER JOIN `' . Database::tablePrefix('domains') . '` AS `dom`'
+                    . ' ON `rp`.`domain_id` = `dom`.`id` SET `seen` = ? WHERE `fqdn` = ? AND `external_id` = ?'
             );
             $st->bindValue(1, $value, \PDO::PARAM_BOOL);
             $st->bindValue(2, $this->data['domain'], \PDO::PARAM_STR);
@@ -248,9 +249,9 @@ class Report
             $st->execute();
             $st->closeCursor();
         } catch (\Exception $e) {
-            throw new \Exception('Failed to update the DB record', -1);
+            throw new Exception('Failed to update the DB record', -1, $e);
         }
-        return [ 'message' => 'Ok' ];
+        return ['message' => 'Ok'];
     }
 
     /**
@@ -285,38 +286,38 @@ class Report
     private static function checkData(array $data): bool
     {
         static $fields = [
-            'domain'             => [ 'required' => true,  'type' => 'string' ],
-            'begin_time'         => [ 'required' => true,  'type' => 'object' ],
-            'end_time'           => [ 'required' => true,  'type' => 'object' ],
-            'org'                => [ 'required' => true,  'type' => 'string' ],
-            'external_id'        => [ 'required' => true,  'type' => 'string' ],
-            'email'              => [ 'required' => false, 'type' => 'string' ],
-            'extra_contact_info' => [ 'required' => false, 'type' => 'string' ],
-            'error_string'       => [ 'required' => false, 'type' => 'array'  ],
-            'policy_adkim'       => [ 'required' => false, 'type' => 'string' ],
-            'policy_aspf'        => [ 'required' => false, 'type' => 'string' ],
-            'policy_p'           => [ 'required' => false, 'type' => 'string' ],
-            'policy_sp'          => [ 'required' => false, 'type' => 'string' ],
-            'policy_pct'         => [ 'required' => false, 'type' => 'string' ],
-            'policy_fo'          => [ 'required' => false, 'type' => 'string' ],
-            'records'            => [ 'required' => true,  'type' => 'array'  ]
+            'domain'             => ['required' => true,  'type' => 'string'],
+            'begin_time'         => ['required' => true,  'type' => 'object'],
+            'end_time'           => ['required' => true,  'type' => 'object'],
+            'org'                => ['required' => true,  'type' => 'string'],
+            'external_id'        => ['required' => true,  'type' => 'string'],
+            'email'              => ['required' => false, 'type' => 'string'],
+            'extra_contact_info' => ['required' => false, 'type' => 'string'],
+            'error_string'       => ['required' => false, 'type' => 'array'],
+            'policy_adkim'       => ['required' => false, 'type' => 'string'],
+            'policy_aspf'        => ['required' => false, 'type' => 'string'],
+            'policy_p'           => ['required' => false, 'type' => 'string'],
+            'policy_sp'          => ['required' => false, 'type' => 'string'],
+            'policy_pct'         => ['required' => false, 'type' => 'string'],
+            'policy_fo'          => ['required' => false, 'type' => 'string'],
+            'records'            => ['required' => true,  'type' => 'array']
         ];
         if (!self::checkRow($data, $fields) || count($data['records']) === 0) {
             return false;
         }
 
         static $rfields = [
-            'ip'            => [ 'required' => true,  'type' => 'string'  ],
-            'rcount'        => [ 'required' => true,  'type' => 'integer' ],
-            'disposition'   => [ 'required' => true,  'type' => 'string'  ],
-            'reason'        => [ 'required' => false, 'type' => 'array'   ],
-            'dkim_auth'     => [ 'required' => false, 'type' => 'array'   ],
-            'spf_auth'      => [ 'required' => false, 'type' => 'array'   ],
-            'dkim_align'    => [ 'required' => true,  'type' => 'string'  ],
-            'spf_align'     => [ 'required' => true,  'type' => 'string'  ],
-            'envelope_to'   => [ 'required' => false, 'type' => 'string'  ],
-            'envelope_from' => [ 'required' => false, 'type' => 'string'  ],
-            'header_from'   => [ 'required' => false, 'type' => 'string'  ]
+            'ip'            => ['required' => true,  'type' => 'string'],
+            'rcount'        => ['required' => true,  'type' => 'integer'],
+            'disposition'   => ['required' => true,  'type' => 'string'],
+            'reason'        => ['required' => false, 'type' => 'array'],
+            'dkim_auth'     => ['required' => false, 'type' => 'array'],
+            'spf_auth'      => ['required' => false, 'type' => 'array'],
+            'dkim_align'    => ['required' => true,  'type' => 'string'],
+            'spf_align'     => ['required' => true,  'type' => 'string'],
+            'envelope_to'   => ['required' => false, 'type' => 'string'],
+            'envelope_from' => ['required' => false, 'type' => 'string'],
+            'header_from'   => ['required' => false, 'type' => 'string']
         ];
         foreach ($data['records'] as &$rec) {
             if (gettype($rec) !== 'array' || !self::checkRow($rec, $rfields)) {
