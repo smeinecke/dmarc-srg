@@ -44,6 +44,8 @@
 
 namespace Liuch\DmarcSrg;
 
+use Liuch\DmarcSrg\Exception;
+use Liuch\DmarcSrg\Log;
 use Liuch\DmarcSrg\Mail\MailBoxes;
 use Liuch\DmarcSrg\Report\ReportFetcher;
 use Liuch\DmarcSrg\Sources\MailboxSource;
@@ -89,8 +91,17 @@ if ($usage) {
     exit(1);
 }
 
+function logException(\Exception $e) {
+    $prev = $e->getPrevious();
+    if ($e instanceof Exception) {
+        $meta = $e->getData();
+    }
+    Log::error($e->getMessage(), $prev ? $prev->getMessage() : null, $meta);
+    return true;
+}
+
 $sou_list = [];
-$messages = [];
+$error = false;
 
 if (!$source || $source === 'email') {
     $mb_list = new MailBoxes();
@@ -98,7 +109,7 @@ if (!$source || $source === 'email') {
         try {
             $sou_list[] = new MailboxSource($mb_list->mailbox($mb_num));
         } catch (\Exception $e) {
-            $messages[] = $e->getMessage();
+            $error = logException($e);
         }
     }
 }
@@ -107,7 +118,7 @@ if (!$source || $source === 'directory') {
         try {
             $sou_list[] = new DirectorySource($dir);
         } catch (\Exception $e) {
-            $messages[] = $e->getMessage();
+            $error = logException($e);
         }
     }
 }
@@ -117,23 +128,22 @@ try {
         $results = (new ReportFetcher($source))->fetch();
         foreach ($results as &$res) {
             if (isset($res['source_error'])) {
-                $messages[] = $res['source_error'];
+                Log::error($res['source_error']);
+                $error = true;
             }
             if (isset($res['post_processing_message'])) {
-                $messages[] = $res['post_processing_message'];
+                Log::error($res['post_processing_message']);
+                $error = true;
             }
             if (isset($res['error_code']) && $res['error_code'] !== 0 && isset($res['message'])) {
-                $messages[] = $res['message'];
+                Log::error($res['message']);
+                $error = true;
             }
         }
         unset($res);
     }
 } catch (\Exception $e) {
-    $messages[] = $e->getMessage();
+    $error = logException($e);
 }
 
-if (count($messages) > 0) {
-    echo implode(PHP_EOL, $messages) . PHP_EOL;
-}
-
-exit(0);
+exit($error ? 1 : 0);
