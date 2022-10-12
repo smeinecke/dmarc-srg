@@ -21,9 +21,9 @@
  *
  * =========================
  *
- * This file contains common classes
+ * This file contains Exception classes
  *
- * @category Common
+ * @category Exception
  * @package  DmarcSrg
  * @author   Aleksey Andreev (liuch)
  * @license  https://www.gnu.org/licenses/gpl-3.0.html GNU/GPLv3
