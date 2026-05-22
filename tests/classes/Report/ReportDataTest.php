@@ -148,7 +148,6 @@ class ReportDataTest extends \PHPUnit\Framework\TestCase
         $this->expectException(SoftException::class);
         $this->expectExceptionMessage('Too many records');
         ReportData::fromXmlFile($fd, false, null, 2);
-        fclose($fd);
     }
 
     public function testFromXmlFileWithLimitZeroIsUnlimited(): void
