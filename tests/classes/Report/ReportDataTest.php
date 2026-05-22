@@ -3,7 +3,6 @@
 namespace Liuch\DmarcSrg\Report;
 
 use Liuch\DmarcSrg\Exception\SoftException;
-use Liuch\DmarcSrg\Exception\RuntimeException;
 
 class ReportDataTest extends \PHPUnit\Framework\TestCase
 {
@@ -144,7 +143,7 @@ class ReportDataTest extends \PHPUnit\Framework\TestCase
     public function testFromXmlFileWithRecordsAboveLimit(): void
     {
         $fd = $this->generateXml(3);
-        $this->expectException(RuntimeException::class);
+        $this->expectException(SoftException::class);
         $this->expectExceptionMessage('Too many records');
         ReportData::fromXmlFile($fd, false, PHP_INT_MAX, 2);
         fclose($fd);
