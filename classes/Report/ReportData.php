@@ -61,7 +61,7 @@ class ReportData
         return $rdata;
     }
 
-    public static function fromXmlFile($fd, $strict = false, int $records_maximum = 50000)
+    public static function fromXmlFile($fd, $strict = false, ?int $maxSize = null, int $records_maximum = 50000)
     {
         $rdata = new self($strict, $records_maximum);
         $rdata->tag_id = '<root>';
@@ -73,8 +73,13 @@ class ReportData
         xml_set_external_entity_ref_handler($parser, function () {
             throw new RuntimeException('The XML document has an external entity!');
         });
+        $total = 0;
         try {
             while ($file_data = fread($fd, 4096)) {
+                $total += strlen($file_data);
+                if ($maxSize !== null && $total > $maxSize) {
+                    throw new SoftException('Report file is too large after decompression');
+                }
                 if (!xml_parse($parser, $file_data, feof($fd))) {
                     $pc = xml_get_error_code($parser);
                     $error_str  = 'XML error!' . PHP_EOL;
