@@ -1,21 +1,35 @@
-# Ignore everything at root level
-/*
+# Git
+.git
+.gitattributes
+.gitignore
 
-# Application code
-!/classes/
-!/config/
-!/public/
-!/utils/
-!/init.php
-!/template.html
-!/composer.json
-!/composer.lock
+# GitHub
+.github
 
-# Docker build files
-!/docker/
-!/Dockerfile
-!/docker-compose.yml
-!/.dockerignore
+# Docker
+Dockerfile
+docker-compose.yml
 
-# Re-ignore local sensitive config
-config/conf.php
+# Documentation and tests
+docs
+tests
+screenshots
+*.md
+
+# Editor / IDE
+.editorconfig
+.vscode
+.idea
+
+# PHP
+vendor
+.phpunit.result.cache
+phpunit.xml
+composer.phar
+
+# Misc
+*.log
+*.swp
+*.swo
+*~
+.env

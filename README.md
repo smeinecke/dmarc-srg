@@ -40,7 +40,6 @@ Ensure that all the files are in their own sub-folder.
 * PHP 8.1 or higher
 * Installed `php-mbstring`, `php-mysql`, `php-xml`, `php-zip`, and `php-json`
 * A working webserver (not necessary)
-* A mailbox where no person/process marks DMARC messages read
 * To process incoming reports in your mailbox, you need to install the `ImapEngine` library. Use composer for that. Note that the PHP IMAP extension is deprecated, however, it is still possible to use it here. See comments in the conf.sample.php file for details.
 * To process incoming reports on the S3 filesystem, you need the `flysystem` package. Use composer for this.
 
@@ -141,7 +140,7 @@ Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; s
 
 ## Mailboxes
 An IMAP connection is sequentially established to each mailbox, and the following actions are performed:
-- Obtaining a list of messages marked as unread.
+- Obtaining a list of unread messages.
 - Checking the content of each message (number of attachments, attachment size, file extension).
 - Extracting a report file from the message and parsing it and adding the report data to the database.
 - If the report is successfully added to the database, the message is set as SEEN.
@@ -270,4 +269,4 @@ cat dmarc-backup.sql | docker compose exec -T db mariadb -u root -p dmarc
 
 - **Application container:** PHP 8.4-FPM + nginx on Alpine Linux. FastCGI communicates via a Unix socket at `/run/php/php-fpm.sock`. Only port 8080 is exposed.
 - **Database container:** MariaDB with a persistent Docker volume.
-- The web root is restricted to `public/`; non-public directories (`config/`, `classes/`, `utils/`, `vendor/`) are outside the web root and unreachable.
+- Non-public directories (`config/`, `classes/`, `utils/`, `vendor/`) are blocked at the nginx level.
