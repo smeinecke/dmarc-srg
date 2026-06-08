@@ -34,12 +34,13 @@ class MailAttachmentTest extends \PHPUnit\Framework\TestCase
         };
 
         $attachment = new MailAttachment([
-            'mailbox'  => $mailbox,
-            'filename' => 'test.xml',
-            'bytes'    => 100,
-            'number'   => 1,
-            'mnumber'  => 1,
-            'encoding' => \ENCBASE64,
+            'mailbox'          => $mailbox,
+            'filename'         => 'test.xml',
+            'bytes'            => 100,
+            'number'           => 1,
+            'mnumber'          => 1,
+            'encoding'         => \ENCBASE64,
+            'header_mime_type' => 'application/xml',
         ]);
 
         $this->expectException(SoftException::class);
@@ -60,12 +61,13 @@ class MailAttachmentTest extends \PHPUnit\Framework\TestCase
         };
 
         $attachment = new MailAttachment([
-            'mailbox'  => $mailbox,
-            'filename' => 'test.xml',
-            'bytes'    => 100,
-            'number'   => 1,
-            'mnumber'  => 1,
-            'encoding' => \ENCQUOTEDPRINTABLE,
+            'mailbox'          => $mailbox,
+            'filename'         => 'test.xml',
+            'bytes'            => 100,
+            'number'           => 1,
+            'mnumber'          => 1,
+            'encoding'         => \ENCQUOTEDPRINTABLE,
+            'header_mime_type' => 'application/xml',
         ]);
 
         $this->expectException(SoftException::class);
