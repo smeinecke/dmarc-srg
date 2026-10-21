@@ -5,27 +5,19 @@ ARG BUILD_DATE
 ARG VCS_REF
 
 # Install system dependencies and PHP extensions
+# mbstring, xml and opcache are compiled into PHP 8.5 core already
 RUN apk add --no-cache \
     nginx \
     tini \
     curl \
     libzip \
-    libxml2 \
-    icu \
-    oniguruma \
     && apk add --no-cache --virtual .build-deps \
     $PHPIZE_DEPS \
     libzip-dev \
-    libxml2-dev \
-    icu-dev \
-    oniguruma-dev \
     && docker-php-ext-install -j$(nproc) \
     pdo_mysql \
     mysqli \
-    mbstring \
-    xml \
     zip \
-    opcache \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/* /tmp/pear
 
