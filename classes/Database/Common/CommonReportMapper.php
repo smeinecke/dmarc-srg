@@ -212,7 +212,7 @@ class CommonReportMapper implements ReportMapperInterface
             );
             foreach ($data->records as &$rec_data) {
                 $st->bindValue(1, $new_id, \PDO::PARAM_INT);
-                $st->bindValue(2, inet_pton($rec_data['ip']), \PDO::PARAM_STR);
+                $st->bindValue(2, inet_pton($rec_data['ip']), \PDO::PARAM_LOB);
                 $st->bindValue(3, $rec_data['count'], \PDO::PARAM_INT);
                 $st->bindValue(4, array_search($rec_data['disposition'], Common::$disposition), \PDO::PARAM_INT);
                 self::sqlBindJson($st, 5, $rec_data['reason']);
@@ -751,7 +751,7 @@ class CommonReportMapper implements ReportMapperInterface
      * The valid filter item names
      */
     private static $filters_available = [
-        'domain', 'month', 'before_time', 'organization', 'dkim', 'spf', 'disposition', 'status'
+        'id', 'domain', 'month', 'before_time', 'organization', 'dkim', 'spf', 'disposition', 'status'
     ];
 
     /**
@@ -863,6 +863,9 @@ class CommonReportMapper implements ReportMapperInterface
                     case 'integer':
                         if ($fn == 'domain') {
                             $filters[0]['a_str'][] = $tname . 'domain_id = ?';
+                            $filters[0]['bindings'][] = [ $fv, \PDO::PARAM_INT ];
+                        } elseif ($fn == 'id') {
+                            $filters[0]['a_str'][] = $tname . 'id = ?';
                             $filters[0]['bindings'][] = [ $fv, \PDO::PARAM_INT ];
                         }
                         break;

@@ -81,7 +81,7 @@ class CommonHostMapper implements HostMapperInterface
                 . $this->connector->tablePrefix('reports') . ' AS rp ON rr.report_id = rp.id'
                 . $user_domains1 . ' WHERE rr.ip = ?' . $user_domains2 . ' GROUP BY report_id) as t'
             );
-            $st->bindValue(1, inet_pton($data['ip']), \PDO::PARAM_STR);
+            $st->bindValue(1, inet_pton($data['ip']), \PDO::PARAM_LOB);
             $st->execute();
             $row = $st->fetch(\PDO::FETCH_NUM);
             $res['reports'] = intval($row[0]);
@@ -93,7 +93,7 @@ class CommonHostMapper implements HostMapperInterface
                 . ' AS rp ON rr.report_id = rp.id' . $user_domains1
                 . ' WHERE rr.ip = ?' . $user_domains2 . ' GROUP BY report_id ORDER BY begin_time DESC LIMIT 2'
             );
-            $st->bindValue(1, inet_pton($data['ip']), \PDO::PARAM_STR);
+            $st->bindValue(1, inet_pton($data['ip']), \PDO::PARAM_LOB);
             $st->execute();
             $last_report = [];
             while ($row = $st->fetch(\PDO::FETCH_NUM)) {
