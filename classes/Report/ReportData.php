@@ -80,6 +80,7 @@ class ReportData
                 if ($total > $maxSize) {
                     throw new SoftException('Report file is too large after decompression');
                 }
+                $file_data = (string) preg_replace('/[\x00-\x08\x0b\x0c\x0e-\x1f]/', '', $file_data);
                 if (!xml_parse($parser, $file_data, feof($fd))) {
                     $pc = xml_get_error_code($parser);
                     $error_str  = 'XML error!' . PHP_EOL;
