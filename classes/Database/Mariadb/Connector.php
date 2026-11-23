@@ -82,11 +82,11 @@ class Connector extends DatabaseConnector
             $this->setANSIMode(false);
             $tables = [];
             $st = $this->dbh->query(
-                'SHOW TABLE STATUS FROM `' . str_replace('`', '', $this->name) . '`' . $like_str
+                'SHOW TABLE STATUS FROM `' . str_replace('`', '``', $this->name) . '`' . $like_str
             );
             while ($row = $st->fetch(\PDO::FETCH_ASSOC)) {
                 $tname = $row['Name'];
-                $rcnt  = $this->dbh->query('SELECT COUNT(*) FROM `' . $tname . '`')->fetch(\PDO::FETCH_NUM)[0];
+                $rcnt  = $this->dbh->query('SELECT COUNT(*) FROM `' . str_replace('`', '``', $tname) . '`')->fetch(\PDO::FETCH_NUM)[0];
                 $tables[substr($tname, $p_len)] = [
                     'engine'       => $row['Engine'],
                     'rows'         => intval($rcnt),
@@ -228,7 +228,7 @@ class Connector extends DatabaseConnector
             $db->query('SET foreign_key_checks = 0');
             $st = $db->query($this->sqlShowTablesQuery());
             while ($table = $st->fetchColumn(0)) {
-                $db->query('DROP TABLE `' . $table . '`');
+                $db->query('DROP TABLE `' . str_replace('`', '``', $table) . '`');
             }
             $st->closeCursor();
             $db->query('SET foreign_key_checks = 1');
@@ -296,7 +296,7 @@ class Connector extends DatabaseConnector
         $res = 'SHOW TABLES';
         $prefix = $this->tablePrefix();
         if (strlen($prefix) > 0) {
-            $res .= ' WHERE `tables_in_' . str_replace('`', '', $this->name)
+            $res .= ' WHERE `tables_in_' . str_replace('`', '``', $this->name)
                 . '` LIKE "' . str_replace('_', '\\_', $prefix) . '%"';
         }
         return $res;

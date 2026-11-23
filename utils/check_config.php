@@ -156,6 +156,13 @@ try {
     }
 
     echo PHP_EOL, '=== DATABASE ===', PHP_EOL;
+    $startChecking('Checking the table prefix');
+    $db_prefix = $core->config('database/table_prefix', '');
+    if (preg_match('/^\w*$/', strval($db_prefix))) {
+        $endChecking();
+    } else {
+        $endChecking('Only latin letters, digits, and the underscore are allowed');
+    }
     $startChecking('Accessibility check');
     try {
         $db_s = $core->database()->state();

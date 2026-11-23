@@ -14,6 +14,7 @@ $database = [
      * to avoid conflicting table names. You do not need to specify this parameter
      * if you use a dedicated database.
      * Example value: dmarc_
+     * Only latin letters, digits, and the underscore are allowed.
      * Caution! Do not use an empty string as the table prefix value if you share the database with
      * other applications.
      * Caution! Do not change this parameter if you have already created the tables in the database
